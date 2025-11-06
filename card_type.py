@@ -3,9 +3,9 @@
 from enum import Enum
 
 class CardType(Enum):
-   SHOOT = "shoot"
-   SHIELD = "shield"
-   REPAIR = "repair"
+   SHOOT = "Shoot"
+   SHIELD = "Shield"
+   REPAIR = "Repair"
 
 class Card():
     def __init__(self, name:str, card_type: CardType):
@@ -15,6 +15,9 @@ class Card():
 
     def __repr__(self):
         return f"Card(name={self.name!r}, card_type={self.card_type.name})"
+    
+    def __str__(self):
+        return self.name
 
     
         
