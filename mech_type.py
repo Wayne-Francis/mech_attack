@@ -5,6 +5,7 @@ from stat_blocks import *
 from card_type import CardType, Card
 import random
 import sys 
+from utility_functions import dice_roll
 
 class MechType(Enum):
    TANK = "tank"
@@ -25,6 +26,11 @@ class Mech():
         self.hand = []
         self.discard_pile = []
         self.mech_type = "Generic"
+        self.hp = 0
+        self.atk = 0
+        self.spd = 0
+        self.max_hp = 0
+        self.shielded = False
 
     def show_stats(self):
         return f"HP = {self.hp}\nCurrent Attack Power = {self.atk}\nCurrent Speed = {self.spd}"
@@ -80,7 +86,7 @@ class Mech():
             input_message = "Pick a card to play (please type a number):\n"
             for index, item in enumerate(options):
                 input_message += f'{index+1}) {item}\n'
-            user_input = input()
+            user_input = input(input_message)
             if user_input.isnumeric():
                 if int(user_input) <= len(options) and int(user_input) >= 1:
                     break
@@ -89,13 +95,66 @@ class Mech():
         self.hand.pop(int(user_input)-1)
         return card_choice
     
-
-
+    def ai_turn(self, player_mech):
+        if self.hp == self.max_hp:
+            for i in range(len(self.hand)):
+                if self.hand[i].card_type == CardType.SHOOT:
+                    card_choice = self.hand.pop(i)
+                    return card_choice
+                if self.hand[i].card_type == CardType.SHIELD:
+                    card_choice = self.hand.pop(i)
+                    return card_choice
+        elif self.hp < (0.25 * self.max_hp):
+            result = dice_roll(100)
+            if result > 40:
+                for i in range(len(self.hand)):
+                    if self.hand[i].card_type == CardType.REPAIR:
+                        card_choice = self.hand.pop(i)
+                        return card_choice
+                    elif self.hand[i].card_type == CardType.SHIELD:
+                        card_choice = self.hand.pop(i)
+                        return card_choice
+            card_choice = random.choice(self.hand)
+            self.hand.remove(card_choice)
+            return card_choice
+        elif player_mech.shielded == True:
+            result = dice_roll(100)
+            if result > 40:
+                for i in range(len(self.hand)):
+                    if self.hand[i].card_type == CardType.SHIELD:
+                        card_choice = self.hand.pop(i)
+                        return card_choice
+                    elif self.hand[i].card_type == CardType.REPAIR:
+                        card_choice = self.hand.pop(i)
+                        return card_choice       
+            card_choice = random.choice(self.hand)
+            self.hand.remove(card_choice)
+            return card_choice
+        else:
+            result = dice_roll(100)
+            if result > 70:
+                for i in range(len(self.hand)):
+                    if self.hand[i].card_type == CardType.SHIELD:
+                        card_choice = self.hand.pop(i)
+                        return card_choice
+                card_choice = random.choice(self.hand)
+                self.hand.remove(card_choice)
+                return card_choice
+            else:
+                for i in range(len(self.hand)):
+                    if self.hand[i].card_type == CardType.SHOOT:
+                        card_choice = self.hand.pop(i)
+                        return card_choice
+                card_choice = random.choice(self.hand)
+                self.hand.remove(card_choice)
+                return card_choice
+        
 class Tank(Mech):
     def __init__(self, name:str):
         super().__init__(name)
 
         self.hp = MECH_TANK_HP
+        self.max_hp = MECH_TANK_HP
         self.atk = MECH_TANK_ATK
         self.spd = MECH_TANK_SPD
         self.mech_type = MechType.TANK
@@ -105,6 +164,7 @@ class Gunner(Mech):
         super().__init__(name)
        
         self.hp = MECH_GUNNER_HP
+        self.max_hp = MECH_GUNNER_HP
         self.atk = MECH_GUNNER_ATK
         self.spd = MECH_GUNNER_SPD
         self.mech_type = MechType.GUNNER
@@ -114,6 +174,7 @@ class Bomber(Mech):
         super().__init__(name)
 
         self.hp = MECH_BOMBER_HP
+        self.max_hp = MECH_BOMBER_HP
         self.atk = MECH_BOMBER_ATK
         self.spd = MECH_BOMBER_SPD
         self.mech_type = MechType.BOMBER
@@ -123,6 +184,7 @@ class Scout(Mech):
         super().__init__(name)
 
         self.hp = MECH_SCOUT_HP
+        self.max_hp = MECH_SCOUT_HP
         self.atk = MECH_SCOUT_ATK
         self.spd = MECH_SCOUT_SPD
         self.mech_type = MechType.SCOUT
@@ -132,6 +194,7 @@ class Solider(Mech):
         super().__init__(name)
 
         self.hp = MECH_SOLIDER_HP
+        self.max_hp = MECH_SOLIDER_HP
         self.atk = MECH_SOLIDER_ATK
         self.spd = MECH_SOLIDER_SPD
         self.mech_type = MechType.SOLIDER
@@ -141,6 +204,7 @@ class Lieutenant(Mech):
         super().__init__(name)
 
         self.hp = MECH_LIEUTENANT_HP
+        self.max_hp = MECH_LIEUTENANT_HP
         self.atk = MECH_LIEUTENANT_ATK
         self.spd = MECH_LIEUTENANT_SPD
         self.mech_type = MechType.LIEUTENANT
@@ -150,6 +214,7 @@ class Captain(Mech):
         super().__init__(name)
 
         self.hp = MECH_CAPTAIN_HP
+        self.max_hp = MECH_CAPTAIN_HP
         self.atk = MECH_CAPTAIN_ATK
         self.spd = MECH_CAPTAIN_SPD
         self.mech_type = MechType.CAPTAIN
@@ -159,6 +224,7 @@ class Commander(Mech):
         super().__init__(name)
 
         self.hp = MECH_COMMANDER_HP
+        self.max_hp = MECH_COMMANDER_HP
         self.atk = MECH_COMMANDER_ATK
         self.spd = MECH_COMMANDER_SPD
         self.mech_type = MechType.COMMANDER
