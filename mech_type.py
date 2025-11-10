@@ -31,9 +31,10 @@ class Mech():
         self.spd = 0
         self.max_hp = 0
         self.shielded = False
+        self.level = 1
 
     def show_stats(self):
-        return f"HP = {self.hp}\nCurrent Attack Power = {self.atk}\nCurrent Speed = {self.spd}"
+        return f"-------------\nYour Stats\nHP = {self.hp}\nCurrent Attack Power = {self.atk}\nCurrent Speed = {self.spd}\nLevel ={self.level}"
 
     def __repr__(self):
         return f"Mech={self.mech_type},name={self.name!r}"
@@ -57,10 +58,18 @@ class Mech():
     
     def shuffle_deck(self):
         self.shuffled_deck = []
-        for i in range(len(self.deck)):
-            if len(self.deck) > 0:
+        while self.deck: 
                 result = random.choice(self.deck)
                 self.deck.remove(result)
+                self.shuffled_deck.append(result)
+        return self.shuffled_deck
+    
+    def re_shuffle_deck(self):
+        copy_deck = self.shuffled_deck.copy()
+        self.shuffled_deck.clear()
+        while copy_deck:
+                result = random.choice(copy_deck)
+                copy_deck.remove(result)
                 self.shuffled_deck.append(result)
         return self.shuffled_deck
     
@@ -72,18 +81,20 @@ class Mech():
         return self.hand
         
     def draw_card(self):
+        if len(self.shuffled_deck) < 1:
+            self.create_deck_from_discard()
         self.hand.append(self.shuffled_deck.pop())
         return self.hand
     
     def show_hand(self):
-        print(f"There are {len(self.hand)} cards in your hand:")
+        print(f"-----------------\nThere are {len(self.hand)} cards in your hand:")
         for index, card in enumerate(self.hand, start=1):
             print(f"{index}. {card}")
 
     def play_card(self):
         while True:
             options = self.hand
-            input_message = "Pick a card to play (please type a number):\n"
+            input_message = "----------------\nChoose An Action Card to Play:\n"
             for index, item in enumerate(options):
                 input_message += f'{index+1}) {item}\n'
             user_input = input(input_message)
@@ -92,30 +103,47 @@ class Mech():
                     break
         card_choice = self.hand[int(user_input) - 1]
         print(f'playing: {card_choice}')
-        self.hand.pop(int(user_input)-1)
+        self.discard_pile.append(self.hand.pop(int(user_input)-1))
         return card_choice
+    
+    def create_deck_from_discard(self):
+        if self.discard_pile:
+            self.shuffled_deck.extend(self.discard_pile)
+        self.discard_pile.clear()
+        self.re_shuffle_deck()
+        return self.shuffled_deck
     
     def ai_turn(self, player_mech):
         if self.hp == self.max_hp:
             for i in range(len(self.hand)):
                 if self.hand[i].card_type == CardType.SHOOT:
                     card_choice = self.hand.pop(i)
+                    self.discard_pile.append(card_choice)
                     return card_choice
                 if self.hand[i].card_type == CardType.SHIELD:
                     card_choice = self.hand.pop(i)
+                    self.discard_pile.append(card_choice)
                     return card_choice
+            else:
+                card_choice = random.choice(self.hand)
+                self.hand.remove(card_choice)
+                self.discard_pile.append(card_choice)   
+                return card_choice 
         elif self.hp < (0.25 * self.max_hp):
             result = dice_roll(100)
             if result > 40:
                 for i in range(len(self.hand)):
                     if self.hand[i].card_type == CardType.REPAIR:
                         card_choice = self.hand.pop(i)
+                        self.discard_pile.append(card_choice)
                         return card_choice
                     elif self.hand[i].card_type == CardType.SHIELD:
                         card_choice = self.hand.pop(i)
+                        self.discard_pile.append(card_choice)
                         return card_choice
             card_choice = random.choice(self.hand)
             self.hand.remove(card_choice)
+            self.discard_pile.append(card_choice)
             return card_choice
         elif player_mech.shielded == True:
             result = dice_roll(100)
@@ -123,11 +151,14 @@ class Mech():
                 for i in range(len(self.hand)):
                     if self.hand[i].card_type == CardType.SHIELD:
                         card_choice = self.hand.pop(i)
+                        self.discard_pile.append(card_choice)
                         return card_choice
                     elif self.hand[i].card_type == CardType.REPAIR:
                         card_choice = self.hand.pop(i)
+                        self.discard_pile.append(card_choice)
                         return card_choice       
             card_choice = random.choice(self.hand)
+            self.discard_pile.append(card_choice)
             self.hand.remove(card_choice)
             return card_choice
         else:
@@ -136,18 +167,74 @@ class Mech():
                 for i in range(len(self.hand)):
                     if self.hand[i].card_type == CardType.SHIELD:
                         card_choice = self.hand.pop(i)
+                        self.discard_pile.append(card_choice)
                         return card_choice
                 card_choice = random.choice(self.hand)
+                self.discard_pile.append(card_choice)
                 self.hand.remove(card_choice)
                 return card_choice
             else:
                 for i in range(len(self.hand)):
                     if self.hand[i].card_type == CardType.SHOOT:
                         card_choice = self.hand.pop(i)
+                        self.discard_pile.append(card_choice)
                         return card_choice
                 card_choice = random.choice(self.hand)
+                self.discard_pile.append(card_choice)
                 self.hand.remove(card_choice)
                 return card_choice
+            
+    def level_up(self):
+        print("You have leveled up")
+        while True:
+            options = ["HP","ATK","SPD"]
+            input_message = "-----------------\nPick a Stat to Improve\n"
+            for index, item in enumerate(options):
+                input_message += f'{index+1}) {item}\n'
+            user_input = input(input_message)
+            if user_input.isnumeric():
+                if int(user_input) <= len(options) and int(user_input) >= 1:
+                    break
+        stat_choice = int(user_input) 
+        print(f'You picked: {options[int(user_input) - 1]}')
+        if stat_choice == 1:
+            self.max_hp += 3
+            self.hp = self.max_hp
+        elif stat_choice == 2:
+            self.atk += 1
+        else:
+            self.spd += 1
+        while True:
+            options = ["Shoot","Shield","Repair"]
+            input_message = "-----------------\nPick a card to add to your deck\n"
+            for index, item in enumerate(options):
+                input_message += f'{index+1}) {item}\n'
+            user_input = input(input_message)
+            if user_input.isnumeric():
+                if int(user_input) <= len(options) and int(user_input) >= 1:
+                    break
+        card_choice = int(user_input)
+        if card_choice == 1:
+            shoot_card = Card("Shoot", CardType.SHOOT)
+            self.shuffled_deck.append(shoot_card)
+        elif card_choice == 2:
+            shield_card = Card("Shield", CardType.SHIELD)
+            self.shuffled_deck.append(shield_card)
+        else:
+            repair_card = Card("Repair", CardType.REPAIR)
+            self.shuffled_deck.append(repair_card)
+        print(f'You picked: {options[int(user_input) - 1]}')
+        self.level += 1
+        self.shuffle_deck()
+    
+    def end_turn_sequence(self):
+        if self.discard_pile:
+            self.shuffled_deck.extend(self.discard_pile)
+        self.discard_pile.clear()
+        self.re_shuffle_deck()
+        self.hp = self.max_hp
+        self.shielded = False
+        return self.shuffled_deck
         
 class Tank(Mech):
     def __init__(self, name:str):
@@ -189,6 +276,9 @@ class Scout(Mech):
         self.spd = MECH_SCOUT_SPD
         self.mech_type = MechType.SCOUT
 
+    def show_stats(self):
+        return f"-------------\nScout Stats\nHP = {self.hp}\nCurrent Attack Power = {self.atk}\nCurrent Speed = {self.spd}"
+
 class Solider(Mech):
     def __init__(self, name:str):
         super().__init__(name)
@@ -198,6 +288,9 @@ class Solider(Mech):
         self.atk = MECH_SOLIDER_ATK
         self.spd = MECH_SOLIDER_SPD
         self.mech_type = MechType.SOLIDER
+
+    def show_stats(self):
+        return f"-------------\nSolider Stats\nHP = {self.hp}\nCurrent Attack Power = {self.atk}\nCurrent Speed = {self.spd}"
 
 class Lieutenant(Mech):
     def __init__(self, name:str):
@@ -209,6 +302,9 @@ class Lieutenant(Mech):
         self.spd = MECH_LIEUTENANT_SPD
         self.mech_type = MechType.LIEUTENANT
 
+    def show_stats(self):
+        return f"-------------\nLieutenant Stats\nHP = {self.hp}\nCurrent Attack Power = {self.atk}\nCurrent Speed = {self.spd}"
+
 class Captain(Mech):
     def __init__(self, name:str):
         super().__init__(name)
@@ -219,6 +315,9 @@ class Captain(Mech):
         self.spd = MECH_CAPTAIN_SPD
         self.mech_type = MechType.CAPTAIN
 
+    def show_stats(self):
+        return f"-------------\nCaptain Stats\nHP = {self.hp}\nCurrent Attack Power = {self.atk}\nCurrent Speed = {self.spd}"
+
 class Commander(Mech):
     def __init__(self, name:str):
         super().__init__(name)
@@ -228,4 +327,7 @@ class Commander(Mech):
         self.atk = MECH_COMMANDER_ATK
         self.spd = MECH_COMMANDER_SPD
         self.mech_type = MechType.COMMANDER
+    
+    def show_stats(self):
+        return f"-------------\nCommander Stats\nHP = {self.hp}\nCurrent Attack Power = {self.atk}\nCurrent Speed = {self.spd}"
      
