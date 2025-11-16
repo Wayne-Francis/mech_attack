@@ -25,25 +25,87 @@ def resolve_card(user,opponent, card):
                 print(f"Enemy Mech uses Shoot ---> {damage} damage done to you")
             opponent.hp -= damage
         else:
-            if opponent.name =="player":
-                print(f"Your shield is destroyed ---> You are vunerable to attack")
-            elif opponent.name =="ai":
-                print(f"Enemy shield destroyed ---> Strike now!")
-            opponent.shielded = False
+            if opponent.mech_type == MechType.TANK:
+                resolve_tank_shield_been_shot(opponent)
+            else:
+                opponent.shielded = False
+                if opponent.name =="player":
+                    print(f"Your shield is destroyed ---> You are vunerable to attack")
+                elif opponent.name =="ai":
+                    print(f"Enemy shield destroyed ---> Strike now!")
+        if user.mech_type == MechType.GUNNER:
+            if user.num_shots > 0:
+                user.num_shots -= 1
+                damage_2 = dice_roll(4) + user.atk
+                if not opponent.shielded:
+                    if user.name =="player":
+                        print(f"Player double Shoots ---> {damage_2} damage done to enemy Mech")
+                    elif user.name =="ai":
+                        print(f"Enemy Mech uses Shoot ---> {damage_2} damage done to you")
+                    opponent.hp -= damage_2
+                else:
+                    if opponent.mech_type == MechType.TANK:
+                        resolve_tank_shield_been_shot(opponent)
+                    else:
+                        if opponent.name =="player":
+                            print(f"Your shield is destroyed ---> You are vunerable to attack")
+                        elif opponent.name =="ai":
+                            print(f"Enemy shield destroyed ---> Strike now!")
+                        opponent.shielded = False
+            else:
+                print(f"You are out of ammo -> gun reloaded for next attack")
+                user.num_shots = 2
     elif card.card_type == CardType.SHIELD:
-        if user.name =="player":
+        if user.mech_type == MechType.TANK:
+            if user.name =="player":
+                print(f"You raise your Shields ---> You will absorb the next 2 attacks")
+                user.shield_hp = 2
+            elif user.name =="ai":
+                print(f"Enemy raised shields ---> It will absorb the next 2 attacks!")
+                user.shield_hp = 2
+        elif user.mech_type != MechType.TANK:
+            if user.name =="player":
                 print(f"You raise your Shields ---> You will absorb the next attack")
-        elif user.name =="ai":
-                print(f"Enemy raised shields ---> shoot them to destroy it!")
+            elif user.name =="ai":
+                print(f"Enemy raised shields ---> It will absorb the next attack!")
         user.shielded = True
     elif card.card_type == CardType.REPAIR:
         user.hp += 3
         if user.hp > user.max_hp:
             user.hp = user.max_hp
-        if user.name =="player":
+        if user.mech_type == MechType.BOMBER:
+            user.shielded = True
+            print(f"You repair some of the damage ---> Your HP is now {user.hp} and you raise your shield")
+        else:
+            if user.name =="player":
                 print(f"You repair some of the damage ---> Your HP is now {user.hp}")
-        elif user.name =="ai":
+            elif user.name =="ai":
                 print(f"The enemy is repairing ---> Their HP is now {user.hp}")
+
+def resolve_tank_shield_been_shot(opponent):
+        if opponent.mech_type == MechType.TANK:
+                opponent.shield_hp -= 1
+
+                if opponent.name =="player":
+                    print(f"Your shield takes a hit")
+                else:
+                    print(f"The enemy shield takes a hit")
+
+                if opponent.shield_hp >= 1:
+                    if opponent.name =="player":
+                        print(f"Your shield can take 1 more hit")
+                    else:
+                        print(f"The enemy can take 1 more hit")
+                       
+                else:
+                    opponent.shielded = False
+                    opponent.shield_hp = 0
+                    if opponent.name =="player":
+                        print(f"Your shield is destroyed")
+                    else:
+                        print(f"The enemy shield is destroyed")
+      
+
 
 def play_turn(player_mech, ai_mech):
     player_card = player_mech.play_card()
@@ -78,7 +140,7 @@ def choose_mech():
 
 def battle_round(ai_mech,player_mech):
     turn = 1
-    while player_mech.hp > 0 or ai_mech.hp >0:
+    while player_mech.hp > 0 and ai_mech.hp >0:
         print(f"--------\nTurn {turn}")
         play_turn(player_mech, ai_mech)
         print(f"-------\nYou have {player_mech.hp} remaining")

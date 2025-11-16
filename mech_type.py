@@ -245,6 +245,7 @@ class Tank(Mech):
         self.atk = MECH_TANK_ATK
         self.spd = MECH_TANK_SPD
         self.mech_type = MechType.TANK
+        self.shield_hp = 2
 
 class Gunner(Mech):
     def __init__(self, name:str):
@@ -255,6 +256,7 @@ class Gunner(Mech):
         self.atk = MECH_GUNNER_ATK
         self.spd = MECH_GUNNER_SPD
         self.mech_type = MechType.GUNNER
+        self.num_shots = 2
 
 class Bomber(Mech):
     def __init__(self, name:str):
