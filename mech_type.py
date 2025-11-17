@@ -4,8 +4,7 @@ from enum import Enum
 from stat_blocks import *
 from card_type import CardType, Card
 import random
-import sys 
-from utility_functions import dice_roll
+from dice_roll import dice_roll
 
 class MechType(Enum):
    TANK = "tank"
@@ -58,9 +57,10 @@ class Mech():
     
     def shuffle_deck(self):
         self.shuffled_deck = []
-        while self.deck: 
-                result = random.choice(self.deck)
-                self.deck.remove(result)
+        copyied_deck = self.deck.copy()
+        while copyied_deck: 
+                result = random.choice(copyied_deck)
+                copyied_deck.remove(result)
                 self.shuffled_deck.append(result)
         return self.shuffled_deck
     
@@ -83,12 +83,18 @@ class Mech():
     def draw_card(self):
         if len(self.shuffled_deck) < 1:
             self.create_deck_from_discard()
-        self.hand.append(self.shuffled_deck.pop())
+        card = self.shuffled_deck.pop()
+        self.hand.append(card)
         return self.hand
     
     def show_hand(self):
         print(f"-----------------\nThere are {len(self.hand)} cards in your hand:")
         for index, card in enumerate(self.hand, start=1):
+            print(f"{index}. {card}")
+
+    def show_deck(self):
+        print(f"-----------------\nThere are {len(self.shuffled_deck)} cards in your deck:")
+        for index, card in enumerate(self.shuffled_deck, start=1):
             print(f"{index}. {card}")
 
     def play_card(self):
@@ -113,77 +119,72 @@ class Mech():
         self.re_shuffle_deck()
         return self.shuffled_deck
     
+    def ai_card_choice(self, desired_card):
+        for i, card in enumerate(self.hand):
+            if card.card_type == desired_card:
+                return self.hand.pop(i)
+        return None
+
     def ai_turn(self, player_mech):
         if self.hp == self.max_hp:
-            for i in range(len(self.hand)):
-                if self.hand[i].card_type == CardType.SHOOT:
-                    card_choice = self.hand.pop(i)
-                    self.discard_pile.append(card_choice)
-                    return card_choice
-                if self.hand[i].card_type == CardType.SHIELD:
-                    card_choice = self.hand.pop(i)
-                    self.discard_pile.append(card_choice)
-                    return card_choice
-            else:
-                card_choice = random.choice(self.hand)
-                self.hand.remove(card_choice)
-                self.discard_pile.append(card_choice)   
-                return card_choice 
+            card_choice = self.ai_card_choice(CardType.SHOOT)
+            if card_choice == None:
+                card_choice = self.ai_card_choice(CardType.SHIELD)
+                if card_choice == None:
+                    card_choice = random.choice(self.hand)
+                    self.hand.remove(card_choice)
+            self.discard_pile.append(card_choice)   
+            return card_choice 
+        
         elif self.hp < (0.25 * self.max_hp):
             result = dice_roll(100)
             if result > 40:
-                for i in range(len(self.hand)):
-                    if self.hand[i].card_type == CardType.REPAIR:
-                        card_choice = self.hand.pop(i)
-                        self.discard_pile.append(card_choice)
-                        return card_choice
-                    elif self.hand[i].card_type == CardType.SHIELD:
-                        card_choice = self.hand.pop(i)
-                        self.discard_pile.append(card_choice)
-                        return card_choice
+                card_choice = self.ai_card_choice(CardType.REPAIR)
+                if card_choice == None:
+                    card_choice = self.ai_card_choice(CardType.SHIELD)
+                    if card_choice == None:
+                        card_choice = random.choice(self.hand)
+                        self.hand.remove(card_choice)
+                self.discard_pile.append(card_choice)
+                return card_choice
             card_choice = random.choice(self.hand)
             self.hand.remove(card_choice)
             self.discard_pile.append(card_choice)
             return card_choice
+        
         elif player_mech.shielded == True:
             result = dice_roll(100)
             if result > 40:
-                for i in range(len(self.hand)):
-                    if self.hand[i].card_type == CardType.SHIELD:
-                        card_choice = self.hand.pop(i)
-                        self.discard_pile.append(card_choice)
-                        return card_choice
-                    elif self.hand[i].card_type == CardType.REPAIR:
-                        card_choice = self.hand.pop(i)
-                        self.discard_pile.append(card_choice)
-                        return card_choice       
+                card_choice = self.ai_card_choice(CardType.REPAIR)
+                if card_choice == None:
+                    card_choice = self.ai_card_choice(CardType.SHIELD)
+                    if card_choice == None:
+                        card_choice = random.choice(self.hand)
+                        self.hand.remove(card_choice)
+                self.discard_pile.append(card_choice)
+                return card_choice  
             card_choice = random.choice(self.hand)
-            self.discard_pile.append(card_choice)
             self.hand.remove(card_choice)
+            self.discard_pile.append(card_choice)
             return card_choice
+        
         else:
             result = dice_roll(100)
             if result > 70:
-                for i in range(len(self.hand)):
-                    if self.hand[i].card_type == CardType.SHIELD:
-                        card_choice = self.hand.pop(i)
-                        self.discard_pile.append(card_choice)
-                        return card_choice
-                card_choice = random.choice(self.hand)
+                card_choice = self.ai_card_choice(CardType.SHIELD)
+                if card_choice == None:
+                    card_choice = random.choice(self.hand)
+                    self.hand.remove(card_choice)
                 self.discard_pile.append(card_choice)
-                self.hand.remove(card_choice)
-                return card_choice
+                return card_choice  
             else:
-                for i in range(len(self.hand)):
-                    if self.hand[i].card_type == CardType.SHOOT:
-                        card_choice = self.hand.pop(i)
-                        self.discard_pile.append(card_choice)
-                        return card_choice
-                card_choice = random.choice(self.hand)
+                card_choice = self.ai_card_choice(CardType.SHOOT)
+                if card_choice == None:
+                    card_choice = random.choice(self.hand)
+                    self.hand.remove(card_choice)
                 self.discard_pile.append(card_choice)
-                self.hand.remove(card_choice)
                 return card_choice
-            
+
     def level_up(self):
         print("You have leveled up")
         while True:
@@ -216,26 +217,48 @@ class Mech():
         card_choice = int(user_input)
         if card_choice == 1:
             shoot_card = Card("Shoot", CardType.SHOOT)
-            self.shuffled_deck.append(shoot_card)
+            self.deck.append(shoot_card)
         elif card_choice == 2:
             shield_card = Card("Shield", CardType.SHIELD)
-            self.shuffled_deck.append(shield_card)
+            self.deck.append(shield_card)
         else:
             repair_card = Card("Repair", CardType.REPAIR)
-            self.shuffled_deck.append(repair_card)
+            self.deck.append(repair_card)
         print(f'You picked: {options[int(user_input) - 1]}')
         self.level += 1
         self.shuffle_deck()
     
     def end_turn_sequence(self):
-        if self.discard_pile:
-            self.shuffled_deck.extend(self.discard_pile)
+        #if self.discard_pile:
+            #self.shuffled_deck.extend(self.discard_pile)
+        self.shuffled_deck.clear()
         self.discard_pile.clear()
-        self.re_shuffle_deck()
+        self.hand.clear()
+        self.shuffle_deck()
+        self.create_starter_hand()
         self.hp = self.max_hp
         self.shielded = False
         return self.shuffled_deck
-        
+    
+    def ai_mech_upgrade(self):
+        options = ["HP", "ATK", "SPD"]
+        choice_1 = random.choice(options)
+        if choice_1 == "HP":
+            self.hp = self.hp * 1.25
+            self.max_hp = self.hp
+        if choice_1 == "ATK":
+            self.atk = self.atk * 1.25
+        if choice_1 == "SPD":
+            self.spd = self.spd * 1.25
+        choice_2 = random.choice(options)
+        if choice_2 == "HP":
+            self.hp = self.hp * 1.25
+            self.max_hp = self.hp
+        if choice_2 == "ATK":
+            self.atk = self.atk * 1.25
+        if choice_2 == "SPD":
+            self.spd = self.spd * 1.25
+
 class Tank(Mech):
     def __init__(self, name:str):
         super().__init__(name)

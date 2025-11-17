@@ -1,19 +1,8 @@
 # utility functions 
 
-import random
-from mech_type import *
-from card_type import *
-
-def dice_roll(dice):
-    if dice == 4:
-        #print(f"rolling D4 .... {mech} rolled a {result}")
-        return random.choice(range(1,5))
-    if dice == 6:
-        #print(f"rolling D6 .... {mech} rolled a {result}")
-        return random.choice(range(1,7))
-    if dice == 100:
-        return random.choice(range(1,101))
-
+from mech_type import MechType
+from card_type import CardType
+from dice_roll import dice_roll
 
 def resolve_card(user,opponent, card):
     if card.card_type == CardType.SHOOT:
@@ -145,10 +134,10 @@ def battle_round(ai_mech,player_mech):
         play_turn(player_mech, ai_mech)
         print(f"-------\nYou have {player_mech.hp} remaining")
         print(f"-------\nEnemy has {ai_mech.hp} remaining")
-        if len(player_mech.deck) < 1:
+        if len(player_mech.shuffled_deck) < 1:
             player_mech.create_deck_from_discard()
         player_mech.draw_card()
-        if len(ai_mech.deck) < 1:
+        if len(ai_mech.shuffled_deck) < 1:
             ai_mech.create_deck_from_discard()
         ai_mech.draw_card()
         if player_mech.hp <= 0:
@@ -157,6 +146,7 @@ def battle_round(ai_mech,player_mech):
         if ai_mech.hp <= 0:
             print(f"You have destroyed the enemy!")
             return True
+        player_mech.show_deck()
         turn += 1
         print(
         "-------------------------------------------------------\n"
