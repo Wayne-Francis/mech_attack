@@ -3,6 +3,8 @@
 from mech_type import MechType
 from card_type import CardType
 from dice_roll import dice_roll
+import sys, time
+from stat_blocks import *
 
 def resolve_card(user,opponent, card):
     if card.card_type == CardType.SHOOT:
@@ -115,16 +117,18 @@ def play_turn(player_mech, ai_mech):
 
 def choose_mech():
     while True:
-        options = ["Tank", "Gunner", "Bomber"]
-        input_message = "----------------\nChoose Your Mech:\n"
-        for index, item in enumerate(options):
-            input_message += f'{index+1}) {item}\n'
-        user_input = input(input_message)
+        options = [f"Tank: HP:{MECH_TANK_HP}, ATTACK: {MECH_TANK_ATK}, SPEED {MECH_TANK_SPD}, 🛡️ Takes 2 Hits To Break", 
+                   f"Gunner: HP:{MECH_GUNNER_HP}, ATTACK: {MECH_GUNNER_ATK}, SPEED {MECH_GUNNER_SPD}, Double 🔫 but must reload every 2 shoot actions (play a thrid shoot card to reload)", 
+                   f"Bomber: HP:{MECH_BOMBER_HP}, ATTACK: {MECH_BOMBER_ATK}, SPEED {MECH_BOMBER_SPD}, Will 🛡️ when 🔨"]
+        #input_message = "----------------\nChoose Your Mech:\n"
+        #for index, item in enumerate(options):
+            #input_message += f'{index+1}) {item}\n'
+        user_input = input()
         if user_input.isnumeric():
             if int(user_input) <= len(options) and int(user_input) >= 1:
                 break
     player_choice = int(user_input) 
-    print(f'playing: {options[int(user_input) - 1]}')
+    #print(f'You picked {options[int(user_input) - 1]}')
     return player_choice
 
 def battle_round(ai_mech,player_mech):
@@ -148,9 +152,17 @@ def battle_round(ai_mech,player_mech):
             return True
         player_mech.show_deck()
         turn += 1
-        print(
-        "-------------------------------------------------------\n"
-        "-------------------------------------------------------\n")
+        #print(
+        #"-------------------------------------------------------\n"
+        #"-------------------------------------------------------\n")
+
+def bordered_line(text=""):
+    WIDTH = 100
+    text = text[:WIDTH]  
+    padded = text + " " * (WIDTH - len(text))
+    print(f"║{padded}║")
+
+
 
 
 
