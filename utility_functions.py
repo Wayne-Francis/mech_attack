@@ -84,30 +84,40 @@ def resolve_card(user, opponent, card):
 
     if card.card_type == CardType.SHOOT:
 
+
+        shooter = "Player" if getattr(user, "is_player", False) else "Enemy" ### Ai gave me this fix
+
         def apply_shot(dmg, label):
+
             if not opponent.shielded:
                 opponent.hp -= dmg
                 log.append(f"{label} → {dmg} damage dealt")
             else:
                 if opponent.mech_type == MechType.TANK:
                     resolve_tank_shield_been_shot(opponent)
-                    log.append(f"{label} → Tank shield absorbs the hit")
+                    if opponent.shielded:
+                        log.append(f"{label} → Tank shield absorbs the hit ({opponent.shield_hp} hits left)")
+                    else:
+                        log.append(f"{label} → Tank shield breaks!")
                 else:
                     opponent.shielded = False
                     log.append(f"{label} → Shield destroyed!")
 
-        dmg = dice_roll(4) + user.atk
-        shooter = "Player" if user.name == "player" else "Enemy"
-        apply_shot(dmg, f"{shooter} fires")
-
         if user.mech_type == MechType.GUNNER:
-            if user.num_shots > 0:
-                user.num_shots -= 2
-                dmg2 = dice_roll(4) + user.atk
-                apply_shot(dmg2, f"{shooter} double-fires")
-            else:
-                log.append(f"{shooter} is out of ammo → Reloading")
+        # If out of ammo → reload only
+            if user.num_shots == 0:
                 user.num_shots = 2
+                log.append(f"{shooter} reloads their weapon")
+                return log
+            for i in range(2):
+                dmg = dice_roll(4) + user.atk
+                apply_shot(dmg, f"{shooter} fires shot {i+1}")
+            user.num_shots = 0
+            return log
+        dmg = dice_roll(4) + user.atk
+        apply_shot(dmg, f"{shooter} fires")
+        return log
+    
 ## Shield Logic 
 
     elif card.card_type == CardType.SHIELD:
@@ -188,9 +198,9 @@ def print_victory_summary():
     print("🎺  Victory  🎺".center(WIDTH))
     print("═" * WIDTH + "\n")
     print(f"You have destroyed the enemy Mech\n")
-    print(f"It looks like you upgrade your Mech from the leftovers\n")
+    print(f"It looks like you can upgrade your Mech\n")
 
-    input("Press ENTER to engage...")
+    input("Press ENTER to upgrade")
 
     print("═" * WIDTH + "\n")
 
@@ -292,11 +302,12 @@ def print_end_summary(round):
     print("Warning lights flicker... then fade.")
     print("Metal groans as your mech collapses beneath you.\n")
 
-    print(f"You held off {round} enemy waves while defending your home.\n")
+    print(f"You held off {round} enemys while defending your home.\n")
 
-    choice = input("PRESS ENTER TO REDEPLOY or Q TO QUIT: ").lower()
+    choice = input("PRESS ENTER TO REDEPLOY or Q TO QUIT: ").strip().lower()
     if choice == "q":
-        return False
+        print("Quitting... Thanks for playing!")
+        exit()  # stops the Python program
 
     print("─" * WIDTH + "\n")
     clear()

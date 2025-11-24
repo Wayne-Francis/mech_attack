@@ -79,19 +79,25 @@ def main():
         player_mech = Gunner("Player")
     else:
         player_mech = Bomber("Player")
+    player_mech.is_player = True
     ai_mech_1 = Scout("ai")
+    ai_mech_1.is_player = False
     ai_mech_1.create_starter_player_deck()
     ai_mech_1.create_starter_hand()
     ai_mech_2 = Solider("ai")
+    ai_mech_1.is_player = False
     ai_mech_2.create_starter_player_deck()
     ai_mech_2.create_starter_hand()
     ai_mech_3 = Lieutenant("ai")
+    ai_mech_1.is_player = False
     ai_mech_3.create_starter_player_deck()
     ai_mech_3.create_starter_hand()
     ai_mech_4 = Captain("ai")
+    ai_mech_1.is_player = False
     ai_mech_4.create_starter_player_deck()
     ai_mech_4.create_starter_hand()
     ai_mech_5 = Commander("ai")
+    ai_mech_1.is_player = False
     ai_mech_5.create_starter_player_deck()
     ai_mech_5.create_starter_hand()
     ai_mech_list = [ai_mech_5, ai_mech_4, ai_mech_3, ai_mech_2, ai_mech_1]
