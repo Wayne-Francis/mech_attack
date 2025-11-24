@@ -186,7 +186,7 @@ class Mech():
                 return card_choice
 
     def level_up(self):
-        print("You have leveled up")
+        print("-----------------\nUpgrade Your Mech!")
         while True:
             options = ["HP","ATK","SPD"]
             input_message = "-----------------\nPick a Stat to Improve\n"
@@ -197,17 +197,17 @@ class Mech():
                 if int(user_input) <= len(options) and int(user_input) >= 1:
                     break
         stat_choice = int(user_input) 
-        print(f'You picked: {options[int(user_input) - 1]}')
+        #print(f'You picked: {options[int(user_input) - 1]}')
         if stat_choice == 1:
-            self.max_hp += 3
+            self.max_hp += 1
             self.hp = self.max_hp
         elif stat_choice == 2:
-            self.atk += 1
+            self.atk += 0.25
         else:
-            self.spd += 1
+            self.spd += 0.25
         while True:
             options = ["Shoot","Shield","Repair"]
-            input_message = "-----------------\nPick a card to add to your deck\n"
+            input_message = "-----------------\nPick an action card to add to your deck\n"
             for index, item in enumerate(options):
                 input_message += f'{index+1}) {item}\n'
             user_input = input(input_message)
@@ -224,7 +224,7 @@ class Mech():
         else:
             repair_card = Card("Repair", CardType.REPAIR)
             self.deck.append(repair_card)
-        print(f'You picked: {options[int(user_input) - 1]}')
+        #print(f'You picked: {options[int(user_input) - 1]}')
         self.level += 1
         self.shuffle_deck()
     
@@ -244,20 +244,20 @@ class Mech():
         options = ["HP", "ATK", "SPD"]
         choice_1 = random.choice(options)
         if choice_1 == "HP":
-            self.hp = self.hp * 1.25
+            self.hp = self.hp * 2
             self.max_hp = self.hp
         if choice_1 == "ATK":
-            self.atk = self.atk * 1.25
+            self.atk = self.atk * 2
         if choice_1 == "SPD":
-            self.spd = self.spd * 1.25
+            self.spd = self.spd * 2
         choice_2 = random.choice(options)
         if choice_2 == "HP":
-            self.hp = self.hp * 1.25
+            self.hp = self.hp * 2
             self.max_hp = self.hp
         if choice_2 == "ATK":
-            self.atk = self.atk * 1.25
+            self.atk = self.atk * 2
         if choice_2 == "SPD":
-            self.spd = self.spd * 1.25
+            self.spd = self.spd * 2
 
 class Tank(Mech):
     def __init__(self, name:str):
@@ -269,6 +269,19 @@ class Tank(Mech):
         self.spd = MECH_TANK_SPD
         self.mech_type = MechType.TANK
         self.shield_hp = 2
+
+    def end_turn_sequence(self):
+        #if self.discard_pile:
+            #self.shuffled_deck.extend(self.discard_pile)
+        self.shuffled_deck.clear()
+        self.discard_pile.clear()
+        self.hand.clear()
+        self.shuffle_deck()
+        self.create_starter_hand()
+        self.hp = self.max_hp
+        self.shielded = False
+        self.shield_hp = 2
+        return self.shuffled_deck
 
 class Gunner(Mech):
     def __init__(self, name:str):
